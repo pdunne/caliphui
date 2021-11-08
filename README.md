@@ -1,5 +1,11 @@
 # caliphui
 
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-blue.svg)](https://opensource.org/licenses/MPL-2.0)
+[![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
+[![CI](https://github.com/pdunne/caliphui/actions/workflows/rust.yml/badge.svg)](https://github.com/pdunne/caliphui/actions/workflows/rust.yml)
+
+
+
 A simple GUI version of the pH calibration tool written in [egui](https://github.com/emilk/egui), based on the [eframe](https://github.com/emilk/egui/tree/master/eframe) template.
 
 ## Usage
