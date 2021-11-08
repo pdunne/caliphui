@@ -1,6 +1,6 @@
 [package]
 name = "caliphui"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Peter Dunne <peter.dunne@applied-magnetism.com>"]
 edition = "2018"
 description = "A simple tool to calibrate and convert pH measurements using a two point method"
