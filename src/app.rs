@@ -48,10 +48,26 @@ impl epi::App for TemplateApp {
         _frame: &mut epi::Frame<'_>,
         _storage: Option<&dyn epi::Storage>,
     ) {
-        let mut spacing_mut = egui::style::Spacing::default();
-        //
-        spacing_mut.item_spacing = egui::Vec2::new(8.0, 12.0);
-        spacing_mut.interact_size = egui::Vec2::new(40.0, 18.0);
+        // let mut spacing_mut = egui::style::Spacing::default();
+        // //
+        // spacing_mut.item_spacing = egui::Vec2::new(8.0, 12.0);
+        // spacing_mut.interact_size = egui::Vec2::new(40.0, 18.0);
+
+        let _spacing_mut = egui::style::Spacing {
+            item_spacing: egui::Vec2::new(8.0, 12.0),
+            window_padding: egui::Vec2::splat(6.0),
+            button_padding: egui::Vec2::new(4.0, 1.0),
+            indent: 18.0, // match checkbox/radio-button with `button_padding.x + icon_width + icon_spacing`
+            interact_size: egui::Vec2::new(40.0, 18.0),
+            slider_width: 100.0,
+            text_edit_width: 280.0,
+            icon_width: 14.0,
+            icon_spacing: 0.0,
+            tooltip_width: 600.0,
+            combo_height: 200.0,
+            scroll_bar_width: 8.0,
+            indent_ends_with_horizontal_line: false,
+        };
 
         let mut fonts = egui::FontDefinitions::default();
 
@@ -174,7 +190,7 @@ pub fn update_calibration(
     slope: &mut f64,
     offset: &mut f64,
 ) {
-    let calibration = routines::ph_calibration(&[*ph4, *ph10], &temperature);
+    let calibration = routines::ph_calibration(&[*ph4, *ph10], temperature);
     *slope = calibration.slope;
     *offset = calibration.offset;
 }
