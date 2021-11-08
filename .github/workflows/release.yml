@@ -69,9 +69,11 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
-          if: matrix.build == 'x86_64-linux' || matrix.build == 'aarch64-linux'
-          run: |
-            sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
+
+      - name: Prepare Linux Tools
+        if: matrix.build == 'x86_64-linux' || matrix.build == 'aarch64-linux  '
+        run: |
+          sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
