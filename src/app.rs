@@ -1,30 +1,44 @@
-use eframe::{egui, epi};
+/* This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+Copyright 2021 Peter Dunne */
 
-/// We derive Deserialize/Serialize so we can persist app state on shutdown.
+use eframe::{
+    egui::{self, Widget},
+    epi,
+};
+use libcaliph::routines;
+
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
-#[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
+#[cfg_attr(feature = "persistence", serde(default))]
 pub struct TemplateApp {
-    // Example stuff:
-    label: String,
-
-    // this how you opt-out of serialization of a member
-    #[cfg_attr(feature = "persistence", serde(skip))]
-    value: f32,
+    ph4: f64,
+    ph10: f64,
+    temperature: f64,
+    slope: f64,
+    offset: f64,
+    ph_measured: f64,
+    calibrated_ph: f64,
 }
 
 impl Default for TemplateApp {
     fn default() -> Self {
         Self {
             // Example stuff:
-            label: "Hello World!".to_owned(),
-            value: 2.7,
+            ph4: 4.01,
+            ph10: 10.01,
+            temperature: 25.0,
+            slope: 1.0,
+            offset: 0.0,
+            ph_measured: 7.0,
+            calibrated_ph: 7.0,
         }
     }
 }
 
 impl epi::App for TemplateApp {
     fn name(&self) -> &str {
-        "eframe template"
+        "Caliphui"
     }
 
     /// Called once before the first frame.
@@ -34,75 +48,111 @@ impl epi::App for TemplateApp {
         _frame: &mut epi::Frame<'_>,
         _storage: Option<&dyn epi::Storage>,
     ) {
+        let mut spacing_mut = egui::style::Spacing::default();
+        //
+        spacing_mut.item_spacing = egui::Vec2::new(8.0, 12.0);
+        spacing_mut.interact_size = egui::Vec2::new(40.0, 18.0);
+
+        let mut fonts = egui::FontDefinitions::default();
+
+        fonts.family_and_size.insert(
+            egui::TextStyle::Heading,
+            (egui::FontFamily::Proportional, 26.0),
+        );
+        fonts.family_and_size.insert(
+            egui::TextStyle::Body,
+            (egui::FontFamily::Proportional, 22.0),
+        );
+
+        fonts.family_and_size.insert(
+            egui::TextStyle::Button,
+            (egui::FontFamily::Proportional, 22.0),
+        );
+        fonts.family_and_size.insert(
+            egui::TextStyle::Monospace,
+            (egui::FontFamily::Monospace, 22.0),
+        );
+
+        _ctx.set_fonts(fonts);
         // Load previous app state (if any).
         // Note that you must enable the `persistence` feature for this to work.
         #[cfg(feature = "persistence")]
         if let Some(storage) = _storage {
             *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
         }
+
+        self.calibrated_ph =
+            update_conversion(&self.ph_measured, &mut self.slope, &mut self.offset);
     }
 
     /// Called by the frame work to save state before shutdown.
-    /// Note that you must enable the `persistence` feature for this to work.
     #[cfg(feature = "persistence")]
     fn save(&mut self, storage: &mut dyn epi::Storage) {
         epi::set_value(storage, epi::APP_KEY, self);
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
-    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
-        let Self { label, value } = self;
-
-        // Examples of how to create different panels and windows.
-        // Pick whichever suits you.
-        // Tip: a good default choice is to just keep the `CentralPanel`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
+    fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut epi::Frame<'_>) {
+        let Self {
+            ph4,
+            ph10,
+            temperature,
+            slope,
+            offset,
+            ph_measured,
+            calibrated_ph,
+        } = self;
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
-            egui::menu::bar(ui, |ui| {
-                egui::menu::menu(ui, "File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        frame.quit();
-                    }
-                });
-            });
-        });
-
-        egui::SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("Side Panel");
-
-            ui.horizontal(|ui| {
-                ui.label("Write something: ");
-                ui.text_edit_singleline(label);
-            });
-
-            ui.add(egui::Slider::new(value, 0.0..=10.0).text("value"));
-            if ui.button("Increment").clicked() {
-                *value += 1.0;
-            }
-
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x = 0.0;
-                    ui.label("powered by ");
-                    ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-                    ui.label(" and ");
-                    ui.hyperlink_to("eframe", "https://github.com/emilk/egui/tree/master/eframe");
-                });
-            });
+            egui::widgets::global_dark_light_mode_switch(ui);
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            // The central panel the region left after adding TopPanel's and SidePanel's
+            ui.heading("Calibrate");
+            let ph4_slider = egui::Slider::new(ph4, 0.0..=14.0)
+                .text("pH 4")
+                .fixed_decimals(2);
+            let ph4_response = ph4_slider.ui(ui);
+            if ph4_response.changed() {
+                update_calibration(ph4, ph10, temperature, slope, offset);
+                *calibrated_ph = update_conversion(ph_measured, slope, offset);
+            }
 
-            ui.heading("eframe template");
-            ui.hyperlink("https://github.com/emilk/eframe_template");
-            ui.add(egui::github_link_file!(
-                "https://github.com/emilk/eframe_template/blob/master/",
-                "Source code."
-            ));
+            let ph10_slider = egui::Slider::new(ph10, 0.0..=14.0)
+                .text("pH 10")
+                .fixed_decimals(2);
+            let ph10_response = ph10_slider.ui(ui);
+            if ph10_response.changed() {
+                update_calibration(ph4, ph10, temperature, slope, offset);
+                *calibrated_ph = update_conversion(ph_measured, slope, offset);
+            }
+
+            let temperature_slider = egui::Slider::new(temperature, 0.0..=100.0)
+                .suffix(" ˚C")
+                .text("T")
+                .fixed_decimals(1);
+            let temperature_response = temperature_slider.ui(ui);
+            if temperature_response.changed() {
+                update_calibration(ph4, ph10, temperature, slope, offset);
+                *calibrated_ph = update_conversion(ph_measured, slope, offset);
+            }
+
+            ui.add_space(5.0);
+
+            // ================
+            ui.heading("Convert");
+            let ph_measured_slider = egui::Slider::new(ph_measured, 0.0..=14.0)
+                .text("Input pH")
+                .fixed_decimals(2);
+            let ph_measured_response = ph_measured_slider.ui(ui);
+            if ph_measured_response.changed() {
+                *calibrated_ph = update_conversion(ph_measured, slope, offset);
+            }
+
+            ui.add_space(10.0);
+            ui.heading("Calibrated pH:");
+            ui.add(egui::DragValue::new(calibrated_ph).speed(1.0));
+
             egui::warn_if_debug_build(ui);
         });
 
@@ -115,4 +165,20 @@ impl epi::App for TemplateApp {
             });
         }
     }
+}
+
+pub fn update_calibration(
+    ph4: &f64,
+    ph10: &f64,
+    temperature: &f64,
+    slope: &mut f64,
+    offset: &mut f64,
+) {
+    let calibration = routines::ph_calibration(&[*ph4, *ph10], &temperature);
+    *slope = calibration.slope;
+    *offset = calibration.offset;
+}
+
+pub fn update_conversion(ph_measured: &f64, slope: &mut f64, offset: &mut f64) -> f64 {
+    routines::ph_convert(ph_measured, &[*slope, *offset])
 }
