@@ -11,7 +11,7 @@ A simple GUI version of the pH calibration tool written in [egui](https://github
 ## Usage
 
 - Native binaries are provided under [releases](https://github.com/pdunne/caliphui/releases)
-- A web interface [here](https://github.com/pdunne/caliphui)
+- A web interface [here](https://pdunne.github.io/caliphui/)
 - Cloning the repo and running locally (see below)
 
 ### Testing locally
