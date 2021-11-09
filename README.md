@@ -5,6 +5,7 @@
 [![CI](https://github.com/pdunne/caliphui/actions/workflows/rust.yml/badge.svg)](https://github.com/pdunne/caliphui/actions/workflows/rust.yml)
 
 A simple GUI version of the pH calibration tool written in [egui](https://github.com/emilk/egui), based on the [eframe](https://github.com/emilk/egui/tree/master/eframe) template.
+
 ## Usage
 
 - Native binaries are provided under [releases](https://github.com/pdunne/caliphui/releases)
