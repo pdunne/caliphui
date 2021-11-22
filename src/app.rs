@@ -154,6 +154,9 @@ impl epi::App for TemplateApp {
             }
 
             ui.add_space(5.0);
+            ui.label(format!("Slope: \t{:01.4}\nOffset:\t{:01.4}", slope, offset));
+
+            ui.add_space(5.0);
 
             // ================
             ui.heading("Convert");
@@ -166,9 +169,9 @@ impl epi::App for TemplateApp {
             }
 
             ui.add_space(10.0);
-            ui.heading("Calibrated pH:");
-            ui.add(egui::DragValue::new(calibrated_ph).speed(1.0));
-
+            // ui.heading("Calibrated pH:");
+            // ui.add(egui::DragValue::new(calibrated_ph).speed(1.0));
+            ui.label(format!("Calibrated pH:\t{:01.2}", calibrated_ph));
             egui::warn_if_debug_build(ui);
         });
 
